@@ -48,11 +48,17 @@ pub const Scanner = struct {
             '+' => Token{ .type = .PLUS, .lexeme = "+", .literal = null },
             '-' => Token{ .type = .MINUS, .lexeme = "-", .literal = null },
             '*' => Token{ .type = .STAR, .lexeme = "*", .literal = null },
-            '/' => Token{ .type = .SLASH, .lexeme = "*", .literal = null },
+            '/' => {
+                if (self.peek() == '/') {
+                    _ = self.advance(); 
+                    return Token{ .type = .DOUBLESLASH, .lexeme = "//", .literal = null };
+                }
+                return Token{ .type = .SLASH, .lexeme = "/", .literal = null };
+            },
             '%' => Token{ .type = .PERCENT, .lexeme = "%", .literal = null },
             else => {
                 std.debug.panic("Unexpected character.", .{});
-            }, // Use panic for unexpected errors
+            }, 
         };
     }
 
