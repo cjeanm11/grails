@@ -152,14 +152,16 @@ const Interpreter = struct {
 };
 
 pub fn main() !void {
-    var args = std.process.args();
-    defer args.deinit();
+    var general_purpose_allocator = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = general_purpose_allocator.deinit();
+    const allocator = general_purpose_allocator.allocator();
 
-    const source = try std.fs.cwd().readFileAlloc(std.heap.page_allocator, args.skip(1).next() orelse "calc.txt", std.math.maxInt(usize));
-    defer std.heap.page_allocator.free(source);
+    // Read from calc.txt
+    const source = try std.fs.cwd().readFileAlloc(allocator, "calc.txt", std.math.maxInt(usize));
+    defer allocator.free(source);
 
     var scanner = Scanner.init(source);
-    var tokens = std.ArrayList(Token).init(std.heap.page_allocator);
+    var tokens = std.ArrayList(Token).init(allocator);
     defer tokens.deinit();
 
     while (true) {
@@ -168,7 +170,7 @@ pub fn main() !void {
         if (token.type == .EOF) break;
     }
 
-    const parser: Parser = Parser.init(tokens.items);
+    const parser = Parser.init(tokens.items);
     var interpreter = Interpreter.init(parser);
     const result = interpreter.interpret();
     std.debug.print("Result: {d}\n", .{result});
@@ -185,9 +187,32 @@ test "basic addition" {
         try tokens.append(token);
         if (token.type == .EOF) break;
     }
-    const parser: Parser = Parser.init(tokens.items); // initialize Parser
+    const parser: Parser = Parser.init(tokens.items); 
     var interpreter = Interpreter.init(parser);
     const result = interpreter.interpret();
 
     try std.testing.expectEqual(result, 3.0);
+}
+
+test "calc.txt test" {
+    const filename = "./calc.txt"; 
+    const file = try std.fs.cwd().openFile(filename, .{}); 
+    defer file.close();                                  
+    const source = try file.reader().readAllAlloc(std.heap.page_allocator, std.math.maxInt(usize)); // Read the entire file
+    defer std.heap.page_allocator.free(source);
+    var scanner = Scanner.init(source);
+    var tokens = std.ArrayList(Token).init(std.heap.page_allocator);
+    defer tokens.deinit();
+
+    while (true) {
+        const token = scanner.scanToken();
+        try tokens.append(token);
+        if (token.type == .EOF) break;
+    }
+    const parser: Parser = Parser.init(tokens.items);
+    var interpreter = Interpreter.init(parser);
+    const result = interpreter.interpret();
+    
+    const expectedResult = 1 + 1;
+    try std.testing.expectEqual(result, expectedResult);
 }
