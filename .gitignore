@@ -72,3 +72,4 @@ zig-out/
 
 .DS_Store
 .vscode/
+main
