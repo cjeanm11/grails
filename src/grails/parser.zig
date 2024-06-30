@@ -36,42 +36,59 @@ pub const Parser = struct {
         return self.tokens[self.current];
     }
 
-    pub fn primary(self: *Parser) f64 {
-        if (self.matchToken(.NUMBERLITERAL)) {
-            return self.tokens[self.current - 1].literal.?;
-        } else {
-            std.debug.print("Expect expression.\n", .{});
-            std.process.exit(1);
-        }
+    pub fn primary(self: *Parser) !f64 {
+          if (self.matchToken(.NUMBERLITERAL)) { 
+              if (self.tokens[self.current - 1].literal) |value| {
+                  return value;
+              } else {
+                  std.debug.print("Error: Expected a number literal.\n", .{});
+                  return error.UnexpectedToken;
+              }
+          } 
+          std.debug.print("Error: Expected expression.\n", .{});
+          return error.UnexpectedToken;
     }
-    pub fn term(self: *Parser) f64 {
-        var expr = self.primary();
-
-        while (self.matchToken(.STAR)) {
+    
+    // Handle more operations: +, -, *, /, //, %
+    pub fn term(self: *Parser) !f64 {
+        var expr = try self.unary();
+    
+        while (self.matchToken(.STAR) or self.matchToken(.SLASH) or self.matchToken(.DOUBLESLASH) or self.matchToken(.PERCENT)) {
             const operator = self.tokens[self.current - 1];
-            const right = self.primary();
+            const right = try self.unary();
             expr = switch (operator.type) {
-                .STAR => expr * right,
+                .STAR => return expr * right,
+                .SLASH => {
+                    if (right == 0.0) return error.DivisionByZero;
+                    return expr / right; 
+                },
+                .DOUBLESLASH => return @divFloor(expr, right),
+                .PERCENT => return @mod(expr, right),        
                 else => unreachable,
             };
         }
-
+    
         return expr;
+    }        
+    
+    pub fn unary(self: *Parser) !f64 {
+        if (self.matchToken(.MINUS)) {
+            return -try self.primary();
+        }
+        return self.primary(); 
     }
-
-    pub fn expression(self: *Parser) f64 {
-        var expr = self.term();
+    pub fn expression(self: *Parser) !f64 {
+        var expr = try self.term();
 
         while (self.matchToken(.PLUS) or self.matchToken(.MINUS)) {
             const operator = self.tokens[self.current - 1];
-            const right = self.term();
+            const right = try self.term(); 
             expr = switch (operator.type) {
                 .PLUS => expr + right,
                 .MINUS => expr - right,
                 else => unreachable,
             };
         }
-
         return expr;
     }
 };

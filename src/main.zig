@@ -24,12 +24,12 @@ pub fn main() !void {
     }
 
     const parser = Parser.init(tokens.items);
-    var interpreter = Interpreter.init(parser);
-    const result = interpreter.interpret();
+    var interpreter = try Interpreter.init(parser);
+    const result = try interpreter.interpret();
     std.debug.print("Result: {d}\n", .{result});
 }
 
-test "basic addition" { 
+test "basic addition" {
     const source = "1 + 2";
     var scanner = Scanner.init(source);
     var tokens = std.ArrayList(Token).init(std.heap.page_allocator);
@@ -40,17 +40,17 @@ test "basic addition" {
         try tokens.append(token);
         if (token.type == .EOF) break;
     }
-    const parser: Parser = Parser.init(tokens.items); 
-    var interpreter = Interpreter.init(parser);
+    const parser: Parser = Parser.init(tokens.items);
+    var interpreter = try Interpreter.init(parser);
     const result = interpreter.interpret();
 
     try std.testing.expectEqual(result, 3.0);
 }
 
 test "calc.txt test" {
-    const filename = "./calc.txt"; 
-    const file = try std.fs.cwd().openFile(filename, .{}); 
-    defer file.close();                                  
+    const filename = "./calc.txt";
+    const file = try std.fs.cwd().openFile(filename, .{});
+    defer file.close();
     const source = try file.reader().readAllAlloc(std.heap.page_allocator, std.math.maxInt(usize)); // Read the entire file
     defer std.heap.page_allocator.free(source);
     var scanner = Scanner.init(source);
@@ -63,9 +63,9 @@ test "calc.txt test" {
         if (token.type == .EOF) break;
     }
     const parser: Parser = Parser.init(tokens.items);
-    var interpreter = Interpreter.init(parser);
-    const result = interpreter.interpret();
-    
+    var interpreter = try Interpreter.init(parser);
+    const result = try interpreter.interpret();
+
     const expectedResult = 1 + 1;
     try std.testing.expectEqual(result, expectedResult);
 }
