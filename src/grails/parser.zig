@@ -37,7 +37,7 @@ pub const Parser = struct {
     }
 
     pub fn primary(self: *Parser) f64 {
-        if (self.matchToken(.NUMBER)) {
+        if (self.matchToken(.NUMBERLITERAL)) {
             return self.tokens[self.current - 1].literal.?;
         } else {
             std.debug.print("Expect expression.\n", .{});

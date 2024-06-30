@@ -32,7 +32,7 @@ pub const Scanner = struct {
             while (!self.isAtEnd() and std.ascii.isDigit(self.peek())) _ = self.advance();
         }
         const value = std.fmt.parseFloat(f64, self.source[self.start..self.current]) catch unreachable;
-        return Token{ .type = .NUMBER, .lexeme = self.source[self.start..self.current], .literal = value };
+        return Token{ .type = .NUMBERLITERAL, .lexeme = self.source[self.start..self.current], .literal = value };
     }
 
     pub fn scanToken(self: *Scanner) Token {
