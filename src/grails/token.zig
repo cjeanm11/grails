@@ -4,9 +4,9 @@ pub const TokenType = enum {
     MINUS,
     STAR,
     SLASH,
-    DOUBLESLASH,  // // (floor division in Python)
-    PERCENT,      // % (modulo)
-    DOUBLESTAR,   // ** (exponentiation)
+    DOUBLESLASH,  
+    PERCENT,      
+    DOUBLESTAR,   
 
     // Bitwise Operators
     AMPERSAND,  // & (bitwise AND)
@@ -81,5 +81,8 @@ pub const TokenType = enum {
 pub const Token = struct { 
     type: TokenType, 
     lexeme: []const u8,
-    literal: ?f64 
+    literal: ?union(enum) { 
+        number: f64,
+        str: []const u8, 
+    }, 
 };

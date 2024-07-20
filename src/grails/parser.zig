@@ -39,7 +39,7 @@ pub const Parser = struct {
     pub fn primary(self: *Parser) !f64 {
           if (self.matchToken(.NUMBERLITERAL)) { 
               if (self.tokens[self.current - 1].literal) |value| {
-                  return value;
+                  return value.number;
               } else {
                   std.debug.print("Error: Expected a number literal.\n", .{});
                   return error.UnexpectedToken;

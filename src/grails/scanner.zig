@@ -1,11 +1,12 @@
 const Token = @import("token.zig").Token;
 const std = @import("std");
 
-// Scanner
 pub const Scanner = struct {
+
     source: []const u8,
     start: usize = 0,
     current: usize = 0,
+
 
     pub fn init(source: []const u8) Scanner {
         return Scanner{ .source = source };
@@ -32,7 +33,50 @@ pub const Scanner = struct {
             while (!self.isAtEnd() and std.ascii.isDigit(self.peek())) _ = self.advance();
         }
         const value = std.fmt.parseFloat(f64, self.source[self.start..self.current]) catch unreachable;
-        return Token{ .type = .NUMBERLITERAL, .lexeme = self.source[self.start..self.current], .literal = value };
+        return Token { 
+                .type = .NUMBERLITERAL, 
+                .lexeme = self.source[self.start..self.current], 
+                .literal = .{ .number = value }
+            };
+    }
+
+    fn string(self: *Scanner) Token {
+        while (self.peek() != '"' and !self.isAtEnd()) {
+            _ = self.advance();
+        }
+
+        if (self.isAtEnd()) {
+            const err = error.UnterminatedString; 
+            std.log.err("String scanning error: {}", .{err});
+            std.debug.panic("String scanning failed.", .{});
+        }
+
+        _ = self.advance(); 
+        const literal = self.source[self.start + 1 .. self.current - 1];
+        
+        return Token{ 
+                .type = .STRINGLITERAL, 
+                .lexeme = self.source[self.start..self.current], 
+                .literal = .{ .str = literal }
+            };
+    }
+
+
+
+    fn identifier(self: *Scanner) Token {
+        while (std.ascii.isLower(self.peek()) or std.ascii.isUpper(self.peek()) or self.peek() == '_') {
+            _ = self.advance();
+        }
+
+        const lexeme = self.source[self.start..self.current];
+        if (std.mem.eql(u8, lexeme, "if")) {
+            return  Token{ .type = .IF, .lexeme = lexeme, .literal = null };
+        } else if (std.mem.eql(u8, lexeme, "else")) {
+            return  Token{ .type = .ELSE, .lexeme = lexeme, .literal = null };
+        } else if (std.mem.eql(u8, lexeme, "elif")) {
+            return  Token{ .type = .ELIF, .lexeme = lexeme, .literal = null };
+        } // more ...
+        return  Token{ .type = .IDENTIFIER, .lexeme = lexeme, .literal = null };
     }
 
     pub fn scanToken(self: *Scanner) Token {
@@ -43,22 +87,37 @@ pub const Scanner = struct {
         const c = self.advance();
 
         if (std.ascii.isDigit(c)) return self.number();
+        if (c == '"') return self.string();
+        if (std.ascii.isLower(self.peek()) or std.ascii.isUpper(self.peek())) return self.identifier();
 
         return switch (c) {
             '+' => Token{ .type = .PLUS, .lexeme = "+", .literal = null },
             '-' => Token{ .type = .MINUS, .lexeme = "-", .literal = null },
-            '*' => Token{ .type = .STAR, .lexeme = "*", .literal = null },
+            '*' => {
+                if (self.peek() == '*') {
+                    _ = self.advance();
+                    return Token{ .type = .DOUBLESTAR, .lexeme = "**", .literal = null };
+                }
+               return Token{ .type = .STAR, .lexeme = "*", .literal = null };
+            },
             '/' => {
                 if (self.peek() == '/') {
-                    _ = self.advance(); 
+                    _ = self.advance();
                     return Token{ .type = .DOUBLESLASH, .lexeme = "//", .literal = null };
                 }
                 return Token{ .type = .SLASH, .lexeme = "/", .literal = null };
             },
+            '!' => {
+                if (self.peek() == '=') {
+                    _ = self.advance();
+                    return Token{ .type = .NOTEQUAL, .lexeme = "!=", .literal = null };
+                }
+                return Token{ .type = .NOT, .lexeme = "!", .literal = null };
+            },
             '%' => Token{ .type = .PERCENT, .lexeme = "%", .literal = null },
             else => {
                 std.debug.panic("Unexpected character.", .{});
-            }, 
+            },
         };
     }
 

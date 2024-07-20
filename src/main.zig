@@ -4,12 +4,20 @@ const Scanner = @import("grails/scanner.zig").Scanner;
 const Parser = @import("grails/parser.zig").Parser;
 const Interpreter = @import("grails/interpreter.zig").Interpreter;
 
+fn printTokenList(tokens: *std.ArrayList(Token)) void {
+    std.debug.print("\n Tokens:\n", .{});
+    for (tokens.items) |token| { 
+        std.debug.print("  {any}\n", .{token});
+    }
+    std.debug.print("\n", .{});
+}
+
+
 pub fn main() !void {
     var general_purpose_allocator = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = general_purpose_allocator.deinit();
     const allocator = general_purpose_allocator.allocator();
 
-    // Read from calc.txt
     const source = try std.fs.cwd().readFileAlloc(allocator, "calc.txt", std.math.maxInt(usize));
     defer allocator.free(source);
 
@@ -22,6 +30,8 @@ pub fn main() !void {
         try tokens.append(token);
         if (token.type == .EOF) break;
     }
+
+    printTokenList(&tokens);
 
     const parser = Parser.init(tokens.items);
     var interpreter = try Interpreter.init(parser);
