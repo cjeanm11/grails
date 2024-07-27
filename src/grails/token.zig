@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const TokenType = enum {
     // Operators
     PLUS,
@@ -8,44 +10,43 @@ pub const TokenType = enum {
     PERCENT,      
     DOUBLESTAR,   
 
-    // Bitwise Operators
-    AMPERSAND,  // & (bitwise AND)
-    PIPE,       // | (bitwise OR)
-    CARET,      // ^ (bitwise XOR)
-    TILDE,      // ~ (bitwise NOT)
-    LEFTSHIFT,  // <<
-    RIGHTSHIFT, // >>
+    // AMPERSAND,  // & (bitwise AND)
+    // PIPE,       // | (bitwise OR)
+    // CARET,      // ^ (bitwise XOR)
+    // TILDE,      // ~ (bitwise NOT)
+    // LEFTSHIFT,  // <<
+    // RIGHTSHIFT, // >>
 
     // Comparison Operators
     EQUAL,
-    NOTEQUAL, // !=
+    NOTEQUAL,
     GREATER,
-    GREATEREQUAL, // >=
+    GREATEREQUAL,
     LESS,
-    LESSEQUAL, // <=
+    LESSEQUAL,
 
     // Assignment Operators
-    ASSIGN,        // =
-    PLUSEQUAL,    // +=
-    MINUSEQUAL,   // -=
-    STAREQUAL,    // *=
-    SLASHEQUAL,   // /=
-    DOUBLESLASHEQUAL, // //=
-    PERCENTEQUAL, // %=
-    DOUBLESTAREQUAL,  // **=
+    ASSIGN,       
+    PLUSEQUAL,    
+    MINUSEQUAL,   
+    STAREQUAL,    
+    SLASHEQUAL,   
+    DOUBLESLASHEQUAL, 
+    PERCENTEQUAL, 
+    DOUBLESTAREQUAL,
 
     // Logical Operators
-    AND,     // and
-    OR,      // or
-    NOT,     // not
+    AND,     
+    OR,      
+    NOT,     
 
     // Delimiters
-    LEFTPAREN,     // (
-    RIGHTPAREN,    // )
-    LEFTBRACKET,   // [
-    RIGHTBRACKET,  // ]
-    LEFTBRACE,     // {
-    RIGHTBRACE,    // }
+    LEFTPAREN,    
+    RIGHTPAREN,   
+    LEFTBRACKET,  
+    RIGHTBRACKET, 
+    LEFTBRACE,    
+    RIGHTBRACE,   
     COMMA,
     COLON,
     DOT,
@@ -86,3 +87,11 @@ pub const Token = struct {
         str: []const u8, 
     }, 
 };
+
+pub fn printTokenList(tokens: *std.ArrayList(Token)) void {
+    std.debug.print("\n Tokens:\n", .{});
+    for (tokens.items) |token| { 
+        std.debug.print("  {any}\n", .{token});
+    }
+    std.debug.print("\n", .{});
+}

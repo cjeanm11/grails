@@ -7,7 +7,6 @@ pub const Scanner = struct {
     start: usize = 0,
     current: usize = 0,
 
-
     pub fn init(source: []const u8) Scanner {
         return Scanner{ .source = source };
     }
@@ -70,13 +69,13 @@ pub const Scanner = struct {
 
         const lexeme = self.source[self.start..self.current];
         if (std.mem.eql(u8, lexeme, "if")) {
-            return  Token{ .type = .IF, .lexeme = lexeme, .literal = null };
+            return Token{ .type = .IF, .lexeme = lexeme, .literal = null };
         } else if (std.mem.eql(u8, lexeme, "else")) {
-            return  Token{ .type = .ELSE, .lexeme = lexeme, .literal = null };
+            return Token{ .type = .ELSE, .lexeme = lexeme, .literal = null };
         } else if (std.mem.eql(u8, lexeme, "elif")) {
-            return  Token{ .type = .ELIF, .lexeme = lexeme, .literal = null };
+            return Token{ .type = .ELIF, .lexeme = lexeme, .literal = null };
         } // more ...
-        return  Token{ .type = .IDENTIFIER, .lexeme = lexeme, .literal = null };
+        return Token{ .type = .IDENTIFIER, .lexeme = lexeme, .literal = null };
     }
 
     pub fn scanToken(self: *Scanner) Token {
@@ -91,14 +90,42 @@ pub const Scanner = struct {
         if (std.ascii.isLower(self.peek()) or std.ascii.isUpper(self.peek())) return self.identifier();
 
         return switch (c) {
+            ',' => Token{ .type = .COMMA, .lexeme = ",", .literal = null },
+            '.' => Token{ .type = .DOT, .lexeme = ".", .literal = null },
+            ';' => Token{ .type = .SEMICOLON, .lexeme = ";", .literal = null },
+            '=' => {
+                if (self.peek() == '=') {
+                    _ = self.advance();
+                    return Token{ .type = .EQUAL, .lexeme = "==", .literal = null };
+                }
+                return Token{ .type = .ASSIGN, .lexeme = "=", .literal = null };
+            },
+            '<' => {
+                if (self.peek() == '=') {
+                    _ = self.advance();
+                    return Token{ .type = .LESSEQUAL, .lexeme = "<=", .literal = null };
+                }
+                return Token{ .type = .LESS, .lexeme = "<", .literal = null };
+            },
+            '>' => {
+                if (self.peek() == '=') {
+                    _ = self.advance();
+                    return Token{ .type = .GREATEREQUAL, .lexeme = ">=", .literal = null };
+                }
+                return Token{ .type = .GREATER, .lexeme = ">", .literal = null };
+            },
             '+' => Token{ .type = .PLUS, .lexeme = "+", .literal = null },
             '-' => Token{ .type = .MINUS, .lexeme = "-", .literal = null },
+            '(' => Token{ .type = .LEFTPAREN, .lexeme = "(", .literal = null },
+            ')' => Token{ .type = .RIGHTPAREN, .lexeme = ")", .literal = null },
+            '{' => Token{ .type = .LEFTBRACE, .lexeme = "{", .literal = null },
+            '}' => Token{ .type = .RIGHTBRACE, .lexeme = "}", .literal = null },
             '*' => {
                 if (self.peek() == '*') {
                     _ = self.advance();
                     return Token{ .type = .DOUBLESTAR, .lexeme = "**", .literal = null };
                 }
-               return Token{ .type = .STAR, .lexeme = "*", .literal = null };
+                return Token{ .type = .STAR, .lexeme = "*", .literal = null };
             },
             '/' => {
                 if (self.peek() == '/') {
